@@ -1,6 +1,6 @@
 \usepackage[spanish]{babel}
 \usepackage{fontspec}
-\usepackage{amssymb}      % Necesario para los símbolos de flechas \blacktriangleleft y \blacktriangleright
+\usepackage{amssymb}      % Símbolos de flechas \blacktriangleleft y \blacktriangleright
 \usepackage{tikz}
 \usetikzlibrary{calc}
 \usepackage{eso-pic}
@@ -72,35 +72,67 @@
     \fancyfoot[R]{\fontsize{9}{11}\selectfont\color{grisMenu}\thepage}%
 }
 
-% --- TIPOGRAFÍA Y ALINEACIÓN SOLICITADA ---
+% --- TIPOGRAFÍA, COLORES FORZADOS Y ALINEACIÓN ---
 \onehalfspacing            % Interlineado 1.5
 \raggedright               % Alineación izquierda (sin justificar)
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
+\color{grisTexto}          % Color base uniforme para todo el texto del libro
 
-% Capítulos Principales: Arial 18 pt, Negrita
-\titleformat{\chapter}[display]
+% Ignorar colores arbitrarios que vengan pegados desde Word/Google Docs
+\let\textcolorOriginal\textcolor
+\renewcommand{\textcolor}[2]{#2}
+
+% Capítulos Principales: Arial 18 pt, Negrita, Azul (arriba, sin espacio hueco)
+\titleformat{\chapter}[block]
   {\fontsize{18}{22}\selectfont\bfseries\color{azulOscuro}}
   {}{0pt}{}
-\titlespacing*{\chapter}{0pt}{-15pt}{12pt}
+\titlespacing*{\chapter}{0pt}{-28pt}{10pt}
 
-% Subsecciones (ej. 27.1): Arial 14 pt, Negrita
-\titleformat{\section}
+% Subsecciones (ej. 27.1): Arial 14 pt, Negrita, Azul (sin numeración automática extra)
+\titleformat{\section}[block]
   {\fontsize{14}{17}\selectfont\bfseries\color{azulOscuro}}
-  {\thesection}{0.6em}{}
+  {}{0pt}{}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
 
-% Sub-apartados internos: Arial 11 pt, Negrita
-\titleformat{\subsection}
-  {\fontsize{11}{14}\selectfont\bfseries\color{grisTexto}}
-  {\thesubsection}{0.6em}{}
+% Sub-apartados internos: Arial 11 pt, Negrita, NEGRO
+\titleformat{\subsection}[block]
+  {\fontsize{11}{14}\selectfont\bfseries\color{black}}
+  {}{0pt}{}
+\titlespacing*{\subsection}{0pt}{8pt}{4pt}
 
-% Pie de figuras: Arial 8 pt
+% --- GUARDAMOS EL \includegraphics ORIGINAL PARA NO ALTERAR LA PORTADA ---
+\let\oldincludegraphics\includegraphics
+
+% Macro que activa tamaño proporcionado (tope 52% ancho y 42% alto) y centrado SOLO en las partes
+\newcommand{\activarImagenesLibro}{%
+    \renewcommand{\includegraphics}[2][]{%
+        \par\vspace{6pt}%
+        \noindent\makebox[\textwidth][c]{%
+            \oldincludegraphics[width=0.52\textwidth,height=0.42\textheight,keepaspectratio]{##2}%
+        }%
+        \par\vspace{2pt}%
+    }%
+}
+
+% Pie de figuras: Arial 8 pt, centrado bajo la imagen y sin etiqueta "Figura X:"
 \DeclareCaptionFont{arial8}{\fontsize{8}{10}\selectfont\color{grisMenu}}
 \captionsetup{
     font=arial8,
-    justification=raggedright,
-    singlelinecheck=false,
-    labelsep=space
+    justification=centering,
+    singlelinecheck=true,
+    labelformat=empty,
+    aboveskip=2pt,
+    belowskip=10pt
+}
+
+% Macro para pies de foto en Arial 8 pt centrados (sin partirse de página)
+\newcommand{\pieFoto}[1]{%
+    \nopagebreak[4]%
+    \par\noindent\makebox[\textwidth][c]{%
+        \parbox{0.85\textwidth}{\centering\fontsize{8}{10}\selectfont\color{grisMenu}#1}%
+    }%
+    \par\vspace{8pt}%
 }
 
 % --- HIPERVÍNCULOS ---
@@ -168,8 +200,8 @@
                     \parbox{7.65cm}{\centering
                         {\hypersetup{menucolor=grisBoton, linkcolor=grisBoton}%
                         \fontsize{15}{17}\selectfont
-                        \Acrobatmenu{PrevPage}{\textcolor{grisBoton}{$\blacktriangleleft$}} \hspace{0.5cm}%
-                        \Acrobatmenu{NextPage}{\textcolor{grisBoton}{$\blacktriangleright$}}}
+                        \Acrobatmenu{PrevPage}{\textcolorOriginal{grisBoton}{$\blacktriangleleft$}} \hspace{0.5cm}%
+                        \Acrobatmenu{NextPage}{\textcolorOriginal{grisBoton}{$\blacktriangleright$}}}
                     }
                 \end{minipage}
             };
@@ -177,8 +209,15 @@
     }%
 }
 
-% Macro para iniciar cada una de las 10 partes
-\newcommand{\iniciarParte}[3]{%
+% Macro auxiliar para cada capítulo listado en la portadilla
+\newcommand{\itemCapituloPortada}[1]{%
+    \par\vspace{3pt}%
+    {\fontsize{10.5}{13}\selectfont\color{azulActivo}\textbf{$>$}\hspace{0.5em}#1}%
+}
+
+% Macro para iniciar cada una de las 10 partes (conservando tu diseño original)
+% #1 = Número | #2 = Título | #3 = Archivo .tex | #4 = Descripción | #5 = Lista de capítulos
+\newcommand{\iniciarParte}[5]{%
     \clearpage
     \thispagestyle{plain}   % Muestra el número de página abajo a la derecha desde la pág. 3
     \setcounter{parteActual}{#1}
@@ -195,19 +234,40 @@
                 xshift=-0.35cm,
                 yshift=-0.35cm
             ] at (current page.north east) {
-          \scalebox{24}{\fuenteNumeroGigante\color{azulActivo!38}#1\kern-0.01em\raisebox{-0.013em}{\scalebox{0.75}{.}}}};
-         \end{tikzpicture}%
+                \scalebox{24}{\fuenteNumeroGigante\color{azulActivo!38}#1\kern-0.01em\raisebox{-0.013em}{\scalebox{0.75}{.}}}%
+            };
+        \end{tikzpicture}%
     }
 
     % Título proporcionado (28pt) que queda limpio por encima del número de fondo
-    \vspace*{2.2cm}
+    \vspace*{1.4cm}
     \begin{minipage}[t]{0.92\textwidth}
         \raggedright
         \fontsize{28}{34}\selectfont\bfseries\color{azulActivo}
         \MakeUppercase{#2}
     \end{minipage}
 
+    % Párrafo introductorio debajo del título en la misma hoja
+    \vspace{0.9cm}
+    \begin{minipage}[t]{0.95\textwidth}
+        \raggedright
+        \fontsize{10.5}{14.5}\selectfont\color{azulActivo}
+        #4
+    \end{minipage}
+
+    % Lista de capítulos de esa parte en la misma hoja
+    \vspace{0.7cm}
+    \begin{minipage}[t]{0.95\textwidth}
+        \raggedright
+        #5
+    \end{minipage}
+
     \clearpage
-    % Carga el contenido de esa parte
-    \input{#3}
+    % Activa el tamaño proporcionado y centrado para todas las ilustraciones del contenido
+    \activarImagenesLibro
+    % Carga el contenido de esa parte solo si el archivo existe
+    \InputIfFileExists{#3}{}{%
+        \vspace*{2cm}
+        {\color{grisMenu}\textit{Contenido en desarrollo (#3)...}}
+    }
 }
