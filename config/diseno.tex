@@ -101,21 +101,56 @@
   {}{0pt}{}
 \titlespacing*{\subsection}{0pt}{8pt}{4pt}
 
-% --- GUARDAMOS EL \includegraphics ORIGINAL PARA NO ALTERAR LA PORTADA ---
+% --- GUARDAMOS COMANDOS ORIGINALES PARA NO ALTERAR LA PORTADA ---
 \let\oldincludegraphics\includegraphics
+\let\oldemph\emph
+\let\oldtextit\textit
 
-% Macro que activa tamaño proporcionado (tope 52% ancho y 42% alto) y centrado SOLO en las partes
+% Bandera para detectar si un texto en cursiva viene justo debajo de una imagen
+\newif\ifdespuesDeImagen
+\despuesDeImagenfalse
+
+% Macro para pies de foto en Arial 8 pt centrados (sin partirse de página)
+\newcommand{\pieFoto}[1]{%
+    \nopagebreak[4]%
+    \begin{center}
+        \vspace{-10pt}% Pega el pie de foto a la imagen
+        \parbox{0.85\textwidth}{%
+            \centering\fontsize{8}{10}\selectfont\color{grisMenu}#1\par
+        }%
+    \end{center}
+    \vspace{4pt}%
+    \global\despuesDeImagenfalse
+}
+
+% Macro que activa tamaño compacto, centrado real y detección automática
 \newcommand{\activarImagenesLibro}{%
     \renewcommand{\includegraphics}[2][]{%
-        \par\vspace{6pt}%
-        \noindent\makebox[\textwidth][c]{%
-            \oldincludegraphics[width=0.52\textwidth,height=0.42\textheight,keepaspectratio]{##2}%
-        }%
-        \par\vspace{2pt}%
+        \begin{center}
+            \oldincludegraphics[width=0.45\textwidth,height=0.35\textheight,keepaspectratio]{##2}%
+        \end{center}
+        \global\despuesDeImagentrue
+    }%
+    \renewcommand{\emph}[1]{%
+        \ifdespuesDeImagen
+            \pieFoto{\oldemph{##1}}%
+        \else
+            \oldemph{##1}%
+        \fi
+    }%
+    \renewcommand{\textit}[1]{%
+        \ifdespuesDeImagen
+            \pieFoto{\oldtextit{##1}}%
+        \else
+            \oldtextit{##1}%
+        \fi
     }%
 }
 
-% Pie de figuras: Arial 8 pt, centrado bajo la imagen y sin etiqueta "Figura X:"
+% Apagar la bandera al terminar cualquier párrafo inmediato (tenga o no pie de foto)
+\AddToHook{para/end}{\global\despuesDeImagenfalse}
+
+% Pie de figuras estándar (por si alguna tabla o figura usa \caption)
 \DeclareCaptionFont{arial8}{\fontsize{8}{10}\selectfont\color{grisMenu}}
 \captionsetup{
     font=arial8,
@@ -124,15 +159,6 @@
     labelformat=empty,
     aboveskip=2pt,
     belowskip=10pt
-}
-
-% Macro para pies de foto en Arial 8 pt centrados (sin partirse de página)
-\newcommand{\pieFoto}[1]{%
-    \nopagebreak[4]%
-    \par\noindent\makebox[\textwidth][c]{%
-        \parbox{0.85\textwidth}{\centering\fontsize{8}{10}\selectfont\color{grisMenu}#1}%
-    }%
-    \par\vspace{8pt}%
 }
 
 % --- HIPERVÍNCULOS ---
