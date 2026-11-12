@@ -1,0 +1,30 @@
+# Archivos auxiliares y temporales de compilación LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+*.bbl
+*.blg
+*.idx
+*.ilg
+*.ind
+*.xdv
+
+# Respaldos y temporales del sistema / editor
+*~
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Opcional: Descomenta la siguiente línea si NO quieres subir el PDF compilado al repositorio
+ main.pdf

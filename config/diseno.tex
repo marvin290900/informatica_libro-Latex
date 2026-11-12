@@ -1,0 +1,213 @@
+\usepackage[spanish]{babel}
+\usepackage{fontspec}
+\usepackage{amssymb}      % Necesario para los símbolos de flechas \blacktriangleleft y \blacktriangleright
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{eso-pic}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{fancyhdr}     % Control exacto de encabezados y pies de página
+
+% --- FUENTE PRINCIPAL: ARIAL (o Liberation Sans en Linux si no tienes Arial instalada) ---
+\IfFontExistsTF{Arial}{
+    \setmainfont{Arial}
+}{
+    \setmainfont{Liberation Sans} % Métricamente idéntica a Arial en Ubuntu
+}
+
+% --- FUENTE EXCLUSIVA PARA LOS NÚMEROS GIGANTES DE PORTADILLA (GOTHIC A1 EXTRA GRUESA) ---
+\IfFontExistsTF{Gothic A1}{
+    \newfontfamily\fuenteNumeroGigante{Gothic A1}[FakeBold=9.5]
+}{
+    \newfontfamily\fuenteNumeroGigante{Liberation Sans}[FakeBold=6]
+}
+
+% --- COLORES DEL DOCUMENTO Y DE LAS 10 PARTES ---
+\definecolor{azulOscuro}{HTML}{12357A}
+\definecolor{azulActivo}{HTML}{153B84}
+\definecolor{grisBoton}{HTML}{99A1AE}
+\definecolor{verdeAcento}{HTML}{7AE582}
+\definecolor{grisTexto}{HTML}{333333}
+\definecolor{grisMenu}{HTML}{666666}
+\definecolor{fondoMenu}{HTML}{FFFFFF}
+
+\definecolor{cPart1}{HTML}{123C73}
+\definecolor{cPart2}{HTML}{3B1E6D}
+\definecolor{cPart3}{HTML}{115793}
+\definecolor{cPart4}{HTML}{2B6E23}
+\definecolor{cPart5}{HTML}{B8860B}
+\definecolor{cPart6}{HTML}{BA0C0C}
+\definecolor{cPart7}{HTML}{2E77BB}
+\definecolor{cPart8}{HTML}{9E3B6B}
+\definecolor{cPart9}{HTML}{991B00}
+\definecolor{cPart10}{HTML}{595959}
+
+% --- GEOMETRÍA: MENÚ LATERAL (8.4 cm) + MÁRGENES DE 2.54 cm ---
+\usepackage[
+    a4paper,
+    landscape,
+    oneside,               % Evita que las páginas pares inviertan el margen izquierdo
+    left=10.94cm,          % 8.4cm del menú lateral + 2.54cm de margen
+    right=2.54cm,
+    top=2.54cm,
+    bottom=2.54cm
+]{geometry}
+
+% --- PIE DE PÁGINA: NÚMERO DE PÁGINA ABAJO A LA DERECHA (SIN ENCABEZADOS) ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyfoot[R]{\fontsize{9}{11}\selectfont\color{grisMenu}\thepage}
+
+\fancypagestyle{plain}{%
+    \fancyhf{}%
+    \renewcommand{\headrulewidth}{0pt}%
+    \renewcommand{\footrulewidth}{0pt}%
+    \fancyfoot[R]{\fontsize{9}{11}\selectfont\color{grisMenu}\thepage}%
+}
+
+% --- TIPOGRAFÍA Y ALINEACIÓN SOLICITADA ---
+\onehalfspacing            % Interlineado 1.5
+\raggedright               % Alineación izquierda (sin justificar)
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Capítulos Principales: Arial 18 pt, Negrita
+\titleformat{\chapter}[display]
+  {\fontsize{18}{22}\selectfont\bfseries\color{azulOscuro}}
+  {}{0pt}{}
+\titlespacing*{\chapter}{0pt}{-15pt}{12pt}
+
+% Subsecciones (ej. 27.1): Arial 14 pt, Negrita
+\titleformat{\section}
+  {\fontsize{14}{17}\selectfont\bfseries\color{azulOscuro}}
+  {\thesection}{0.6em}{}
+
+% Sub-apartados internos: Arial 11 pt, Negrita
+\titleformat{\subsection}
+  {\fontsize{11}{14}\selectfont\bfseries\color{grisTexto}}
+  {\thesubsection}{0.6em}{}
+
+% Pie de figuras: Arial 8 pt
+\DeclareCaptionFont{arial8}{\fontsize{8}{10}\selectfont\color{grisMenu}}
+\captionsetup{
+    font=arial8,
+    justification=raggedright,
+    singlelinecheck=false,
+    labelsep=space
+}
+
+% --- HIPERVÍNCULOS ---
+\usepackage[
+    colorlinks=true,
+    linkcolor=azulActivo,
+    urlcolor=azulActivo,
+    menucolor=grisBoton,
+    bookmarks=true,
+    bookmarksopen=true
+]{hyperref}
+
+% Variable que rastrea en qué parte (1 a 10) está el lector
+\newcounter{parteActual}
+\setcounter{parteActual}{0}
+
+% Macro auxiliar: cuadros anchos (6.2cm + 0.95cm), altos (0.96cm) y letra grande (10.5pt)
+\newcommand{\cajaBotonMenu}[3]{%
+    \colorbox{#1}{%
+        \parbox[c][0.96cm][c]{6.2cm}{\centering\fontsize{10.5}{12.5}\selectfont\bfseries\color{white}#2}%
+    }\hspace{2pt}%
+    \colorbox{#1}{%
+        \parbox[c][0.96cm][c]{0.95cm}{\centering\fontsize{11.5}{13}\selectfont\bfseries\color{white}#3}%
+    }%
+}
+
+% Macro para crear cada ítem del menú lateral
+\newcommand{\itemMenuLateral}[2]{%
+    \hyperlink{parte:#1}{%
+        \ifnum\value{parteActual}=#1
+            \cajaBotonMenu{azulActivo}{#2}{#1}%
+        \else
+            \cajaBotonMenu{grisBoton}{#2}{#1}%
+        \fi
+    }\\[4pt]
+}
+
+% --- DIBUJO AUTOMÁTICO DEL MENÚ IZQUIERDO EN CADA HOJA ---
+\newcommand{\activarMenuLateral}{%
+    \AddToShipoutPictureBG{%
+        \begin{tikzpicture}[remember picture, overlay]
+            % Fondo blanco limpio en la barra lateral ampliada
+            \fill[fondoMenu] (current page.north west) rectangle ([xshift=8.3cm]current page.south west);
+
+            % Logo superior izquierdo INFORMÁTICA®
+            \node[anchor=north east, xshift=8.1cm, yshift=-1.8cm] at (current page.north west) {
+                \fontsize{17}{20}\selectfont\bfseries\color{azulActivo}INFORMÁTICA\textsuperscript{\scriptsize®}
+            };
+
+            % Lista apilada de las 10 partes + flechas casi topadas al cuadro 10
+            \node[anchor=north west, xshift=0.35cm, yshift=-3.8cm] at (current page.north west) {
+                \begin{minipage}{8.6cm}
+                    \itemMenuLateral{1}{Orígenes: Del Cálculo Manual a la Máquina}
+                    \itemMenuLateral{2}{La Era Electrónica}
+                    \itemMenuLateral{3}{Fundamentos de la Informática y el Hardware}
+                    \itemMenuLateral{4}{Sistemas Operativos}
+                    \itemMenuLateral{5}{Bases de Datos}
+                    \itemMenuLateral{6}{Lenguajes de Programación}
+                    \itemMenuLateral{7}{Redes, Internet y Ciberseguridad}
+                    \itemMenuLateral{8}{La Era Moderna}
+                    \itemMenuLateral{9}{Tendencias a Futuro}
+                    \itemMenuLateral{10}{Anexos y Glosarios}
+                    
+                    \vspace{4pt}
+                    \parbox{7.65cm}{\centering
+                        {\hypersetup{menucolor=grisBoton, linkcolor=grisBoton}%
+                        \fontsize{15}{17}\selectfont
+                        \Acrobatmenu{PrevPage}{\textcolor{grisBoton}{$\blacktriangleleft$}} \hspace{0.5cm}%
+                        \Acrobatmenu{NextPage}{\textcolor{grisBoton}{$\blacktriangleright$}}}
+                    }
+                \end{minipage}
+            };
+        \end{tikzpicture}%
+    }%
+}
+
+% Macro para iniciar cada una de las 10 partes
+\newcommand{\iniciarParte}[3]{%
+    \clearpage
+    \thispagestyle{plain}   % Muestra el número de página abajo a la derecha desde la pág. 3
+    \setcounter{parteActual}{#1}
+    \hypertarget{parte:#1}{}
+    \pdfbookmark[0]{Parte #1: #2}{parte:#1}
+
+    % Dibuja el número gigante (#1.) DE FONDO (BG) completo y sin cortarse
+    \AddToShipoutPictureBG*{%
+        \begin{tikzpicture}[remember picture, overlay]
+            \node[
+                anchor=north east,
+                inner sep=0pt,
+                outer sep=0pt,
+                xshift=-0.35cm,
+                yshift=-0.35cm
+            ] at (current page.north east) {
+          \scalebox{24}{\fuenteNumeroGigante\color{azulActivo!38}#1\kern-0.01em\raisebox{-0.013em}{\scalebox{0.75}{.}}}};
+         \end{tikzpicture}%
+    }
+
+    % Título proporcionado (28pt) que queda limpio por encima del número de fondo
+    \vspace*{2.2cm}
+    \begin{minipage}[t]{0.92\textwidth}
+        \raggedright
+        \fontsize{28}{34}\selectfont\bfseries\color{azulActivo}
+        \MakeUppercase{#2}
+    \end{minipage}
+
+    \clearpage
+    % Carga el contenido de esa parte
+    \input{#3}
+}
