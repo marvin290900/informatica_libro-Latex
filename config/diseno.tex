@@ -1,4 +1,4 @@
-\usepackage[spanish]{babel}
+\usepackage[spanish, es-noquoting, es-noshorthands]{babel}
 \usepackage{fontspec}
 \usepackage{amssymb}      % Símbolos de flechas \blacktriangleleft y \blacktriangleright
 \usepackage{tikz}
@@ -79,9 +79,9 @@
 \setlength{\parskip}{6pt}
 \color{grisTexto}          % Color base uniforme para todo el texto del libro
 
-% Ignorar colores arbitrarios que vengan pegados desde Word/Google Docs
+% Ignorar colores arbitrarios que vengan pegados desde Word/Google Docs (con o sin [HTML]/[RGB])
 \let\textcolorOriginal\textcolor
-\renewcommand{\textcolor}[2]{#2}
+\RenewDocumentCommand{\textcolor}{o m m}{#3}
 
 % Capítulos Principales: Arial 18 pt, Negrita, Azul (arriba, sin espacio hueco)
 \titleformat{\chapter}[block]
@@ -127,7 +127,7 @@
 \newcommand{\activarImagenesLibro}{%
     \renewcommand{\includegraphics}[2][]{%
         \begin{center}
-            \oldincludegraphics[width=0.45\textwidth,height=0.35\textheight,keepaspectratio]{##2}%
+            \oldincludegraphics[width=18cm,height=0.45\textheight,keepaspectratio]{##2}%
         \end{center}
         \global\despuesDeImagentrue
     }%
